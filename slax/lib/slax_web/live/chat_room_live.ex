@@ -1,8 +1,8 @@
 defmodule SlaxWeb.ChatRoomLive do
   use SlaxWeb, :live_view
 
+  alias Slax.Chat
   alias Slax.Chat.Room
-  alias Slax.Repo
 
   def render(assigns) do
     ~H"""
@@ -80,8 +80,9 @@ defmodule SlaxWeb.ChatRoomLive do
           ## if(@active, do: "bg-slate-300", else: "hover:bg-slate-300")
         ]
       }
-      navigate={
+      patch={
         ## navigate == href for .link, allows for reusing the websocket
+        ## patch == navigate for .hlink, allows reusing the socket (if you're navigating to the same LiveView)
         ## ~p generates a path that's checked against router.ex
         ## @room == @room.id in this context
         ~p"/rooms/#{@room}"
@@ -96,31 +97,40 @@ defmodule SlaxWeb.ChatRoomLive do
   end
 
   @spec mount(any(), any(), Phoenix.LiveView.Socket.t()) :: {:ok, map()}
-  def mount(params, _session, socket) do
+  def mount(_params, _session, socket) do
     if connected?(socket) do
       IO.puts("mounting (connected)")
     else
       IO.puts("mounting (not connected)")
     end
 
-    rooms = Repo.all(Room)
+    rooms = Chat.list_rooms()
+
+    socket =
+      socket
+      |> assign(:rooms, rooms)
+
+    {:ok, socket}
+  end
+
+  def handle_params(params, _uri, socket) do
+    IO.puts("handle_params #{inspect(params)} (connected: #{connected?(socket)})")
 
     room =
       case Map.fetch(params, "id") do
         {:ok, id} ->
-          Repo.get!(Room, id)
+          Chat.get_room!(id)
 
         :error ->
-          List.first(rooms)
+          List.first(socket.assigns.rooms)
       end
 
     socket =
       socket
       |> assign(:room, room)
-      |> assign(:rooms, rooms)
       |> assign(:hide_topic?, false)
 
-    {:ok, socket}
+    {:noreply, socket}
   end
 
   def handle_event("toggle-topic", _params, socket) do
