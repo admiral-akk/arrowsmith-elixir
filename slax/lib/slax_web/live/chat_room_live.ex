@@ -70,7 +70,7 @@ defmodule SlaxWeb.ChatRoomLive do
   defp room_link(assigns) do
     ## ~p generates a path that's checked against router.ex
     ~H"""
-    <a
+    <.link
       class={
         [
           "flex items-center h-8 text-sm pl-8 pr-3",
@@ -80,7 +80,8 @@ defmodule SlaxWeb.ChatRoomLive do
           ## if(@active, do: "bg-slate-300", else: "hover:bg-slate-300")
         ]
       }
-      href={
+      navigate={
+        ## navigate == href for .link, allows for reusing the websocket
         ## ~p generates a path that's checked against router.ex
         ## @room == @room.id in this context
         ~p"/rooms/#{@room}"
@@ -90,7 +91,7 @@ defmodule SlaxWeb.ChatRoomLive do
       <span class={["ml-2 leading-none", @active && "font-bold"]}>
         {@room.name}
       </span>
-    </a>
+    </.link>
     """
   end
 
