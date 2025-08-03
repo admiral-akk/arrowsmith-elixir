@@ -48,7 +48,6 @@ defmodule SlaxWeb.ChatRoomLive.Edit do
     end
   end
 
-  @spec handle_event(<<_::104>>, map(), map()) :: {:noreply, map()}
   def handle_event("validate-room", %{"room" => room_params}, socket) do
     changeset =
       socket.assigns.room
@@ -58,7 +57,6 @@ defmodule SlaxWeb.ChatRoomLive.Edit do
     {:noreply, assign_form(socket, changeset)}
   end
 
-  @spec mount(map(), any(), any()) :: {:ok, map()}
   def mount(%{"id" => id}, _session, socket) do
     room = Chat.get_room!(id)
     changeset = Chat.change_room(room)
