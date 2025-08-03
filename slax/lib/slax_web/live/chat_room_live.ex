@@ -35,7 +35,6 @@ defmodule SlaxWeb.ChatRoomLive do
         </div>
       </div>
     </div>
-    <div>Welcome to the chat!</div>
     <div class="flex flex-col grow shadow-lg">
       <div class="flex justify-between items-center shrink-0 h-16 bg-white border-b border-slate-300 px-4">
         <div class="flex flex-col gap-1.5">
@@ -69,6 +68,7 @@ defmodule SlaxWeb.ChatRoomLive do
   ## Function component - takes an assigns map as arg, returns ~H
   ## https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html
   defp room_link(assigns) do
+    ## ~p generates a path that's checked against router.ex
     ~H"""
     <a
       class={
@@ -80,7 +80,11 @@ defmodule SlaxWeb.ChatRoomLive do
           ## if(@active, do: "bg-slate-300", else: "hover:bg-slate-300")
         ]
       }
-      href="#"
+      href={
+        ## ~p generates a path that's checked against router.ex
+        ## @room == @room.id in this context
+        ~p"/rooms/#{@room}"
+      }
     >
       <.icon name="hero-hashtag" class="h-4 w-4" />
       <span class={["ml-2 leading-none", @active && "font-bold"]}>
@@ -90,7 +94,8 @@ defmodule SlaxWeb.ChatRoomLive do
     """
   end
 
-  def mount(_params, _session, socket) do
+  @spec mount(any(), any(), Phoenix.LiveView.Socket.t()) :: {:ok, map()}
+  def mount(params, _session, socket) do
     if connected?(socket) do
       IO.puts("mounting (connected)")
     else
@@ -98,7 +103,15 @@ defmodule SlaxWeb.ChatRoomLive do
     end
 
     rooms = Repo.all(Room)
-    room = rooms |> List.first()
+
+    room =
+      case Map.fetch(params, "id") do
+        {:ok, id} ->
+          Repo.get!(Room, id)
+
+        :error ->
+          List.first(rooms)
+      end
 
     socket =
       socket
